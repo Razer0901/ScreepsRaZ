@@ -8,9 +8,6 @@
 /dist
 /node_modules
 
-# TypeScript definitions installed by Typings
-/typings
-
 # Screeps config file
 /config.json
 
