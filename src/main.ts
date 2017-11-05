@@ -1,3 +1,9 @@
+import * as Kernel from "./kernel/kernel";
+import './cli';
+
 export function loop() {
-  console.log("hello world!");
+    Kernel.loadProcessTable();
+    Kernel.garbageCollection();
+    Kernel.run();
+    Kernel.storeProcessTable();
 }
