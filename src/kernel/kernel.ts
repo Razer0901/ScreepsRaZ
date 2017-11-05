@@ -1,86 +1,126 @@
+/* ===== Imports ===== */
 import {definitions, Process} from "../processes/process";
 import {ProcessStatus} from "../processes/process-status";
 
-let processList: { [pid: string]: Process} = {}; // Dictionary of processes -> Key:pid, Value:process
-let processQueue: Process[] = []; // List of processes; Populated every tick
+let processList: { [pid: string]: Process} = {};    // Dictionary of processes => Key:pid, Value:process
+let processQueue: Process[] = [];                   // List of processes; Populated every tick
 
-const clear = function(){
+/**
+ * Clears processList and processQueue variables so they can be re-populated
+ */
+const clear = () => {
     processList = {};
     processQueue = [];
 };
 
-//Gets an id that is not in use
-//TODO: Loop back when MAX_PID is hit
-let getFreePid = () => {
-    Memory.pidCounter = Memory.pidCounter || 1; //Initialize pidCounter to 1 if it is undefined
-
-    //Increment until one isn't in use
-    while (getProcessById(Memory.pidCounter)) {
-        Memory.pidCounter += 1;
-    }
-
-    return Memory.pidCounter;
+/**
+ * Next process ID based on Memory.pidCounter which increments every request
+ * NOTE: Does not check for overlap (not necessary unless one tries to start loop with processes running)
+ * @return {number} pid
+ */
+const getFreePid = () => {
+    return Memory.pidCounter = (Memory.pidCounter || 0) + 1;
 };
 
-export let getProcessMemory = (pid:number) => {
-    Memory.processMemory = Memory.processMemory || {}; // Initializes processMemory list
-    Memory.processMemory[pid] = Memory.processMemory[pid] || {}; // Initializes specific process's memory
+/**
+ * Recalls data responsible for specific process from memory
+ * @param {number} pid
+ * @returns {any}
+ */
+export let getProcessMemory = (pid: number) => {
+    Memory.processMemory = Memory.processMemory || {};              // Init processMemory list if it doesn't exists
+    Memory.processMemory[pid] = Memory.processMemory[pid] || {};    // Init process's memory list if it doesn't exists
     return Memory.processMemory[pid];
 };
 
-export let getProcessById = (pid:number) => processList[pid];
+/**
+ * Looks up process by pid from list
+ * @param {number} pid
+ * @return {Process} process
+ */
+export let getProcessById = (pid: number) => processList[pid];
 
-export let addProcess = function<T extends Process>(process:T){
-    let pid = getFreePid();
+/**
+ * Adds a process to the processList (allocates required memory and assigns pid)
+ * @param {Process} process
+ * @returns {Process} process (with pid and memory initialized)
+ */
+export let addProcess = <T extends Process>(process: T) => {
+    const pid = getFreePid();                           // Grab valid PID
     process.pid = pid;                                  // Assign PID
-    processList[process.pid] = process;                 // Put it in the list of all processes
+    processList[process.pid] = process;                 // Add to list of processes
     Memory.processMemory[pid] = process.memory || {};   // Allocate/store memory
 
     return processList[process.pid];
 };
 
-export let killProcess = function(pid:number){
+/**
+ * Kills process and child processes
+ * @param {number} pid
+ * @returns {number} -1=fail, pid=success
+ */
+export let killProcess = (pid: number) => {
+    // Prevents killing of all processes
     if (pid === 0) {
-        console.log("YOU CAN'T KILL PID 0");
+        console.log("Good try :P You can't kill process 0!");
         return -1;
     }
 
+    // Kills current process and resets memory
     processList[pid].status = ProcessStatus.DEAD;
     Memory.processMemory[pid] = undefined;
 
     // Kill child processes
-    console.log("Killing child processes...");
+    console.log("Killing children of process " + pid + " ...");
 
-    for (let otherPid in processList) {             // Loop through all processes
-        const tempProcess = processList[otherPid];  // Store temp process
-        if ((pid === parseInt(otherPid, 10)) && (tempProcess.status !== ProcessStatus.DEAD)) {
-            killProcess(tempProcess.pid);
+    for (const otherPid in processList) {                       // Loop through all processes
+        const tempProcess = processList[otherPid];              // Store temp process
+        if ((pid === parseInt(otherPid, 10))
+            && (tempProcess.status !== ProcessStatus.DEAD)) {   // Check if process is a child
+            killProcess(tempProcess.pid);                       // Kill child process (recursion)
         }
     }
 };
 
-export let suspendProcess = function(pid:number){
-    const tempProcess = processList[pid];
-    if(tempProcess.status !== ProcessStatus.DEAD){
-        tempProcess.status = ProcessStatus.SUSPENDED;
-        return;
+/**
+ * Suspends a process by pid
+ * @param {number} pid
+ * @returns {number} -1=fail, pid=success
+ */
+export let suspendProcess = (pid: number) => {
+    const tempProcess = processList[pid];               // Store temp process
+    if (tempProcess.status !== ProcessStatus.DEAD) {    // Check if process is dead
+        tempProcess.status = ProcessStatus.SUSPENDED;   // Suspend process
+        return pid;
+    } else {
+        console.log("Process " + pid + " is already dead.");
+        return -1;
     }
 };
 
-export let storeProcessTable = function () {
-    let aliveProcess = _.filter(_.values(processList),
-        (p: Process) => p.status !== ProcessStatus.DEAD);
+/**
+ * Stores process list to Memory and omits dead processes
+ */
+export let storeProcessList = () => {
+    const aliveProcess = _.filter(_.values(processList),
+        (p: Process) => p.status !== ProcessStatus.DEAD);   // Filter out dead processes
 
     Memory.processList = _.map(aliveProcess,
-        (p: Process) => [p.pid, p.parentPid, p.className, p.priority, p.status]);
+        (p: Process) => [p.pid, p.parentPid, p.className, p.priority, p.status]);   // Save to Memory
 };
 
-export let garbageCollection = function () {
-    Memory.processMemory = _.pick(Memory.processMemory,
-        (_: any, k: string) => (processList[k]));
+/**
+ * Filter and cleans Memory of unused process memory
+ */
+export let garbageCollection = () => {
+    Memory.processMemory = _.pick(Memory.processMemory, (_: any, k: string) => (processList[k]));
 };
 
-export let run = function () {
+/**
+ * Runs processes
+ */
+export let run = () => {
+    // Loops through all processes and run the ones that are alive
     let process = processQueue.pop();
     while (process) {
         try {
@@ -97,16 +137,21 @@ export let run = function () {
     }
 };
 
-export let loadProcessTable = function () {
-    clear();
-    Memory.processList = Memory.processList || [];
-    let storedList = Memory.processList;
-    for (let item of storedList) {
-        let [pid, parentPID, className, priority, status] = item;
-        try {
+/**
+ * Load the processList from memory
+ */
+export let loadProcessList = () => {
+    clear();    // Clear variables
+    Memory.processList = Memory.processList || [];  // Init processlist in memory
+    const storedList = Memory.processList;          // Holds a cache of the processList in memory
 
-            let memory = getProcessMemory(pid);
-            const process: Process = new definitions[className](pid, parentPID, priority > 1 ? priority -- : priority, status);
+    // Loops through processes
+    for (const item of storedList) {
+        const [pid, parentPID, className, priority, status] = item;
+        try {
+            const memory = getProcessMemory(pid);
+            const process: Process =
+                new definitions[className](pid, parentPID, priority, status);
             process.memory = memory;
             processList[process.pid] = process;
             processQueue.push(process);
@@ -115,16 +160,11 @@ export let loadProcessTable = function () {
             console.log(className);
         }
     }
-    processQueue = _.sortBy(processQueue, (p: Process) => p.priority);
-    // DUAL SORT: processQueue = _.sortByAll(processQueue, [(p: Process) => p.data.runOrderIndex, (p: Process) => p.data.runTime]);
-    // MAYBE FASTER: processQueue.sort((a,b) => a.priority - b.priority)
 
+    // Sort processQueue by priority
+    processQueue.sort((a, b) => b.priority - a.priority);
+    /*
+    DUAL SORT:
+        processQueue.sortByAll(processQueue, [(p: Process) => p.data.runOrderIndex, (p: Process) => p.data.runTime]);
+     */
 };
-
-// STORE Process
-
-//Remake table and queue
-
-// Storing table -> loop through table and only put in tuple of all of the non dead ones
-
-//New process -> Get pid,

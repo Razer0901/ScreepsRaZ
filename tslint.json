@@ -4,12 +4,12 @@
   ],
   "rules": {
     "forin": false,
-    "interface-name": [false],
+    "interface-name": ["never-prefix"],
     "no-console": [false],
     "no-namespace": [true, "allow-declarations"],
     "trailing-comma": [
       true,
-      "never"
+      {"multiline": "never", "singleline": "never"}
     ],
     "variable-name": [
       true,

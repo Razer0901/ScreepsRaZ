@@ -1,5 +1,8 @@
-interface Memory{
+/**
+ * To make syntax highlighting work...
+ */
+interface Memory {
     processList: any;
-    processMemory:any;
-    pidCounter:number;
+    processMemory: any;
+    pidCounter: number;
 }

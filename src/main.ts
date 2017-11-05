@@ -1,9 +1,13 @@
+/* ===== Imports ===== */
+import "./cli";
 import * as Kernel from "./kernel/kernel";
-import './cli';
 
+/**
+ * Main Screeps loop
+ */
 export function loop() {
-    Kernel.loadProcessTable();
-    Kernel.garbageCollection();
-    Kernel.run();
-    Kernel.storeProcessTable();
+    Kernel.loadProcessList();       // Load all processes from memory
+    Kernel.garbageCollection();     // Clean memory
+    Kernel.run();                   // Run processes
+    Kernel.storeProcessList();      // Store processes
 }

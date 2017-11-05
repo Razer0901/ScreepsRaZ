@@ -1,19 +1,23 @@
+/* ===== Imports ===== */
 import * as Kernel from "../kernel/kernel";
 import {ProcessStatus} from "./process-status";
 
-export abstract class Process{
-    public pid: number;
-    public parentPid: number;
+/**
+ * Main process class that defines a process
+ */
+export abstract class Process {
+    public pid: number;                 // Process ID
+    public parentPid: number;           // Process ID of parent process
 
-    public status: ProcessStatus;
-    public abstract className: string;
+    public status: ProcessStatus;       // Status of process
+    public abstract className: string;  // Type of process
 
-    public priority: number; //1-16
-    public memory: any;
+    public priority: number;            // Priority level
+    public memory: any;                 // Memory to run process
 
-    protected kernel = Kernel;
+    protected kernel = Kernel;          // Kernel process is running on
 
-    constructor(pid:number, parentPid:number, priority:number = 8, status:ProcessStatus = ProcessStatus.ALIVE){
+    constructor(pid: number, parentPid: number, priority: number = 8, status: ProcessStatus = ProcessStatus.ALIVE) {
         this.pid = pid;
         this.parentPid = parentPid;
         this.priority = priority;
@@ -21,28 +25,37 @@ export abstract class Process{
         this.className = Object.getPrototypeOf(this).constructor.name;
     }
 
-    // constructor(){
-    //
-    // }
+    // Implement this for each process
+    public abstract run(): any;
 
-    public abstract run():any;
-
+    // Safely kill this process
     public stop() {
         this.kernel.killProcess(this.pid);
         return;
     }
 }
 
+/**
+ * Interface to make class reconstruction work
+ */
 export interface IsProcess {
     className?: string;
-    new(pid:number, parentPid:number, status: ProcessStatus, priority: number, memory?: any): Process;
+    new(pid: number, parentPid: number, status: ProcessStatus, priority: number, memory?: any): Process;
 }
 
+/**
+ * Map of all different types of processes
+ * @type {{}}
+ */
 export const definitions: { [className: string]: IsProcess } = {};
 
-export const processDecorator = (name: string) => {
-    // ctor is the constructor of the class that this was called on
-    return (ctor: IsProcess) => {
-        definitions[name] = ctor;
+/**
+ * Add class to definitions
+ * @param {string} className
+ * @returns {constructor} of specified class
+ */
+export const processDecorator = (className: string) => {
+    return (constructor: IsProcess) => {
+        definitions[className] = constructor;
     };
 };
