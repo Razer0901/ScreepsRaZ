@@ -13,6 +13,7 @@ export class TestProcess extends Process {
      */
     public run(): number {
         console.log(this.pid + " : Running test process!");
+        this.memory = this.memory + 1 || 0;
         return 0;
     }
 }

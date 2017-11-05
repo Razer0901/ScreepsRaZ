@@ -23,17 +23,6 @@ const getFreePid = () => {
 };
 
 /**
- * Recalls data responsible for specific process from memory
- * @param {number} pid
- * @returns {any}
- */
-export let getProcessMemory = (pid: number) => {
-    Memory.processMemory = Memory.processMemory || {};              // Init processMemory list if it doesn't exists
-    Memory.processMemory[pid] = Memory.processMemory[pid] || {};    // Init process's memory list if it doesn't exists
-    return Memory.processMemory[pid];
-};
-
-/**
  * Looks up process by pid from list
  * @param {number} pid
  * @return {Process} process
@@ -49,7 +38,6 @@ export let addProcess = <T extends Process>(process: T) => {
     const pid = getFreePid();                           // Grab valid PID
     process.pid = pid;                                  // Assign PID
     processList[process.pid] = process;                 // Add to list of processes
-    Memory.processMemory[pid] = process.memory || {};   // Allocate/store memory
 
     return processList[process.pid];
 };
@@ -68,7 +56,6 @@ export let killProcess = (pid: number) => {
 
     // Kills current process and resets memory
     processList[pid].status = ProcessStatus.DEAD;
-    Memory.processMemory[pid] = undefined;
 
     // Kill child processes
     console.log("Killing children of process " + pid + " ...");
@@ -99,24 +86,6 @@ export let suspendProcess = (pid: number) => {
 };
 
 /**
- * Stores process list to Memory and omits dead processes
- */
-export let storeProcessList = () => {
-    const aliveProcess = _.filter(_.values(processList),
-        (p: Process) => p.status !== ProcessStatus.DEAD);   // Filter out dead processes
-
-    Memory.processList = _.map(aliveProcess,
-        (p: Process) => [p.pid, p.parentPid, p.className, p.priority, p.status]);   // Save to Memory
-};
-
-/**
- * Filter and cleans Memory of unused process memory
- */
-export let garbageCollection = () => {
-    Memory.processMemory = _.pick(Memory.processMemory, (_: any, k: string) => (processList[k]));
-};
-
-/**
  * Runs processes
  */
 export let run = () => {
@@ -138,21 +107,34 @@ export let run = () => {
 };
 
 /**
+ * Stores process list to Memory and omits dead processes
+ */
+export let storeProcessList = () => {
+    const aliveProcess = _.filter(_.values(processList),
+        (p: Process) => p.status !== ProcessStatus.DEAD);   // Filter out dead processes
+
+    // Save to Memory
+    Memory.processList = _.map(aliveProcess,
+        (p: Process) => [p.pid, p.parentPid, p.className, p.priority, p.status, p.memory]
+    );
+};
+
+/**
  * Load the processList from memory
  */
 export let loadProcessList = () => {
-    clear();    // Clear variables
+    clear();                                        // Clear variables
     Memory.processList = Memory.processList || [];  // Init processlist in memory
     const storedList = Memory.processList;          // Holds a cache of the processList in memory
 
     // Loops through processes
     for (const item of storedList) {
-        const [pid, parentPID, className, priority, status] = item;
+        const [pid, parentPID, className, priority, status, memory] = item;
         try {
-            const memory = getProcessMemory(pid);
             const process: Process =
-                new definitions[className](pid, parentPID, priority, status);
-            process.memory = memory;
+                new definitions[className](pid, parentPID, memory);
+            process.priority = priority;
+            process.status = status;
             processList[process.pid] = process;
             processQueue.push(process);
         } catch (e) {

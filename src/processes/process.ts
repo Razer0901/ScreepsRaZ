@@ -17,11 +17,12 @@ export abstract class Process {
 
     protected kernel = Kernel;          // Kernel process is running on
 
-    constructor(pid: number, parentPid: number, priority: number = 8, status: ProcessStatus = ProcessStatus.ALIVE) {
+    constructor(pid: number, parentPid: number, memory?: any) {
         this.pid = pid;
         this.parentPid = parentPid;
-        this.priority = priority;
-        this.status = status;
+        this.priority = 8;
+        this.status = ProcessStatus.ALIVE;
+        this.memory = memory;
         this.className = Object.getPrototypeOf(this).constructor.name;
     }
 
@@ -40,7 +41,7 @@ export abstract class Process {
  */
 export interface IsProcess {
     className?: string;
-    new(pid: number, parentPid: number, status: ProcessStatus, priority: number, memory?: any): Process;
+    new(pid: number, parentPid: number, memory?: any): Process;
 }
 
 /**
