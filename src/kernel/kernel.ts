@@ -1,6 +1,5 @@
 /* ===== Imports ===== */
-import {definitions, Process} from "../processes/process";
-import {ProcessStatus} from "../processes/process-status";
+import {definitions, Process, ProcessStatus} from "../processes/process";
 
 let processList: { [pid: string]: Process} = {};    // Dictionary of processes => Key:pid, Value:process
 let processQueue: Process[] = [];                   // List of processes; Populated every tick

@@ -1,6 +1,5 @@
 /* ===== Imports ===== */
 import * as Kernel from "../kernel/kernel";
-import {ProcessStatus} from "./process-status";
 
 /**
  * Main process class that defines a process
@@ -58,3 +57,10 @@ export const processDecorator = (className: string) => {
         definitions[className] = constructor;
     };
 };
+
+export enum ProcessStatus {
+    ALIVE,
+    DEAD,
+    SUSPENDED,
+    INTERRUPTED
+}
