@@ -1,5 +1,6 @@
 /* ===== Imports ===== */
 import * as Kernel from "./kernel/kernel";
+import {RoomManagementProcess} from "./processes/room-management-process";
 import {TestProcess} from "./processes/test-process";
 
 declare const global: any;    // Used to define command line functions
@@ -32,4 +33,11 @@ global.echo = (message: string) => {
  */
 global.kill = (pid: number) => {
     return Kernel.killProcess(pid);
+};
+
+global.initRoomManagement = () => {
+    const process = new RoomManagementProcess(0, 0);
+    Kernel.addProcess(process);
+    Kernel.storeProcessList();
+    return process;
 };
