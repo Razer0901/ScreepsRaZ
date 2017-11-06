@@ -15,8 +15,6 @@ export abstract class Process {
     public priority: number;            // Priority level
     public memory: any;                 // Memory to run process
 
-    protected kernel = Kernel;          // Kernel process is running on
-
     constructor(pid: number, parentPid: number, memory?: any) {
         this.pid = pid;
         this.parentPid = parentPid;
@@ -31,7 +29,7 @@ export abstract class Process {
 
     // Safely kill this process
     public stop() {
-        this.kernel.killProcess(this.pid);
+        Kernel.killProcess(this.pid);
         return;
     }
 }
