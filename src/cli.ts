@@ -30,6 +30,6 @@ global.echo = (message: string) => {
  * @param {number} pid
  * @returns {number} -1=fail, pid=success
  */
-global.pKill = (pid: number) => {
+global.kill = (pid: number) => {
     return Kernel.killProcess(pid);
 };
