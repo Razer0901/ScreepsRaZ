@@ -8,8 +8,8 @@ declare const global: any;    // Used to define command line functions
  * Adds a TestProcess to the processList
  * @returns {TestProcess}
  */
-global.addTestProcess = () => {
-    const process = new TestProcess(0, 0);
+global.addTest = (parentPid?: number) => {
+    const process = new TestProcess(0, parentPid || 0);
     Kernel.addProcess(process);
     Kernel.storeProcessList();
     return process;
@@ -23,4 +23,13 @@ global.addTestProcess = () => {
 global.echo = (message: string) => {
     console.log(message);
     return message;
+};
+
+/**
+ * Kill a process by pid
+ * @param {number} pid
+ * @returns {number} -1=fail, pid=success
+ */
+global.pKill = (pid: number) => {
+    return Kernel.killProcess(pid);
 };

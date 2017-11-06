@@ -62,11 +62,12 @@ export let killProcess = (pid: number) => {
 
     for (const otherPid in processList) {                       // Loop through all processes
         const tempProcess = processList[otherPid];              // Store temp process
-        if ((pid === parseInt(otherPid, 10))
+        if ((pid === tempProcess.parentPid)
             && (tempProcess.status !== ProcessStatus.DEAD)) {   // Check if process is a child
             killProcess(tempProcess.pid);                       // Kill child process (recursion)
         }
     }
+    return pid;
 };
 
 /**
@@ -113,10 +114,7 @@ export let storeProcessList = () => {
     const aliveProcess = _.filter(_.values(processList),
         (p: Process) => p.status !== ProcessStatus.DEAD);   // Filter out dead processes
 
-    // Save to Memory
-    Memory.processList = _.map(aliveProcess,
-        (p: Process) => [p.pid, p.parentPid, p.className, p.priority, p.status, p.memory]
-    );
+    Memory.processList = _.indexBy(aliveProcess, (p: Process) => p.pid);
 };
 
 /**
@@ -127,24 +125,25 @@ export let loadProcessList = () => {
     Memory.processList = Memory.processList || [];  // Init processlist in memory
     const storedList = Memory.processList;          // Holds a cache of the processList in memory
 
-    // Loops through processes
-    for (const item of storedList) {
-        const [pid, parentPID, className, priority, status, memory] = item;
+    // Load from memory
+    for (const pid in storedList) {
+        const tempProcess = storedList[pid];
         try {
             const process: Process =
-                new definitions[className](pid, parentPID, memory);
-            process.priority = priority;
-            process.status = status;
+                new definitions[tempProcess.className](parseInt(pid, 10), tempProcess.parentPid, tempProcess.memory);
+            process.priority = tempProcess.priority;
+            process.status = tempProcess.status;
             processList[process.pid] = process;
             processQueue.push(process);
         } catch (e) {
             console.log("Error when loading:" + e.message);
-            console.log(className);
+            console.log(tempProcess.className);
         }
     }
 
     // Sort processQueue by priority
     processQueue.sort((a, b) => b.priority - a.priority);
+
     /*
     DUAL SORT:
         processQueue.sortByAll(processQueue, [(p: Process) => p.data.runOrderIndex, (p: Process) => p.data.runTime]);
