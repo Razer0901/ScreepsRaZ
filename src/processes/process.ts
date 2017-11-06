@@ -9,7 +9,7 @@ export abstract class Process {
     public parentPid: number;           // Process ID of parent process
 
     public status: ProcessStatus;       // Status of process
-    public abstract className: string;  // Type of process
+    public className: string;           // Type of process
 
     public priority: number;            // Priority level
     public memory: any;                 // Memory to run process
@@ -17,9 +17,9 @@ export abstract class Process {
     constructor(pid: number, parentPid: number, memory?: any) {
         this.pid = pid;
         this.parentPid = parentPid;
-        this.priority = 8;
         this.status = ProcessStatus.ALIVE;
-        this.memory = memory;
+        this.priority = 8;
+        this.memory = memory || {};
         this.className = Object.getPrototypeOf(this).constructor.name;
     }
 
@@ -59,8 +59,8 @@ export const processDecorator = (className: string) => {
 };
 
 export enum ProcessStatus {
-    ALIVE,
-    DEAD,
-    SUSPENDED,
-    INTERRUPTED
+    ALIVE = 0,
+    DEAD = 1,
+    SUSPENDED = 2,
+    INTERRUPTED = 3
 }
