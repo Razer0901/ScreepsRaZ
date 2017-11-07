@@ -1,8 +1,8 @@
 /* ===== Imports ===== */
-import {Process, processDecorator} from "./process";
+import {Process, processDecorator} from "../process";
 
-@processDecorator("RoomProcess")                // Define as a type of process
-export class RoomProcess extends Process {
+@processDecorator("CreepManager")                // Define as a type of process
+export class CreepManager extends Process {
     /**
      * Override run method to constantly print
      * @returns {number}
@@ -16,5 +16,11 @@ export class RoomProcess extends Process {
         }
 
         return 0;
+    }
+
+    public processRequest(originPid: number, data: any) {
+        console.log(originPid, data);
+        const temp = "Spawn1";
+        Game.spawns[temp].spawnCreep( [WORK, CARRY, MOVE], "Tila");
     }
 }

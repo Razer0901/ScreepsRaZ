@@ -1,7 +1,7 @@
 /* ===== Imports ===== */
 import * as Kernel from "./kernel/kernel";
-import {RoomManagementProcess} from "./processes/room-management-process";
-import {TestProcess} from "./processes/test-process";
+import {Init} from "./processes/init";
+import {Test} from "./processes/test";
 
 declare const global: any;    // Used to define command line functions
 
@@ -10,7 +10,7 @@ declare const global: any;    // Used to define command line functions
  * @returns {TestProcess}
  */
 global.addTest = (parentPid?: number) => {
-    const process = new TestProcess(0, parentPid || 0);
+    const process = new Test(0, parentPid || 0);
     Kernel.addProcess(process);
     Kernel.storeProcessList();
     return process;
@@ -31,12 +31,12 @@ global.echo = (message: string) => {
  * @param {number} pid
  * @returns {number} -1=fail, pid=success
  */
-global.kill = (pid: number) => {
+global.pkill = (pid: number) => {
     return Kernel.killProcess(pid);
 };
 
-global.initRoomManagement = () => {
-    const process = new RoomManagementProcess(0, 0);
+global.pinit = () => {
+    const process = new Init(0, 0);
     Kernel.addProcess(process);
     Kernel.storeProcessList();
     return process;

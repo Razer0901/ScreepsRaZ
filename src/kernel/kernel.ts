@@ -29,6 +29,22 @@ const getFreePid = () => {
 export let getProcessById = (pid: number) => processList[pid];
 
 /**
+ * Looks up process by className from list
+ * @param {string} className
+ * @return {Process} process
+ */
+export let getProcessByClass = (className: string) => {
+    const temp: number[] = [];
+    for (const pid in processList) {
+        const process = processList[pid];
+        if (process.className === className) {
+            temp.push(processList[pid].pid);
+        }
+    }
+    return temp;
+};
+
+/**
  * Adds a process to the processList (allocates required memory and assigns pid)
  * @param {Process} process
  * @returns {Process} process (with pid and memory initialized)
@@ -83,6 +99,10 @@ export let suspendProcess = (pid: number) => {
         console.log("Process " + pid + " is already dead.");
         return -1;
     }
+};
+
+export let sendRequest = (destPid: number, originPid: number, data: any) => {
+    getProcessById(destPid).processRequest(originPid, data);
 };
 
 /**

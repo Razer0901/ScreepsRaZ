@@ -23,6 +23,11 @@ export abstract class Process {
         this.className = Object.getPrototypeOf(this).constructor.name;
     }
 
+    // Implement this to be able to handle requests from other processes
+    public processRequest(originPid: number, data: any) {
+        console.log(originPid, data);
+    }
+
     // Implement this for each process
     public abstract run(): any;
 
