@@ -101,8 +101,8 @@ export let suspendProcess = (pid: number) => {
     }
 };
 
-export let sendRequest = (destPid: number, originPid: number, data: any) => {
-    getProcessById(destPid).processRequest(originPid, data);
+export let sendRequest = (destPid: number, data: any) => {
+    getProcessById(destPid).processRequest(data);
 };
 
 /**

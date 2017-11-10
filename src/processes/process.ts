@@ -24,8 +24,8 @@ export abstract class Process {
     }
 
     // Implement this to be able to handle requests from other processes
-    public processRequest(originPid: number, data: any) {
-        console.log(originPid, data);
+    public processRequest(data: any) {
+        console.log(data);
     }
 
     // Implement this for each process

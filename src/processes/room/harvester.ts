@@ -9,7 +9,8 @@ export class Harvester extends Process {
      * @returns {number}
      */
     public run(): number {
-        Kernel.sendRequest(this.getCreepManagerPid(), this.pid, {});
+        Kernel.sendRequest(this.getCreepManagerPid(), {body: [WORK, CARRY, MOVE], orignPid: this.pid,
+            roomID: this.memory.roomID});
 
         this.status = ProcessStatus.SUSPENDED;
 
