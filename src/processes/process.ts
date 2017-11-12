@@ -24,8 +24,8 @@ export abstract class Process {
     }
 
     // Implement this to be able to handle requests from other processes
-    public processRequest(data: any) {
-        console.log(data);
+    public messageAlert() {
+        this.status = ProcessStatus.ALIVE;
     }
 
     // Implement this for each process
@@ -66,6 +66,5 @@ export const processDecorator = (className: string) => {
 export enum ProcessStatus {
     ALIVE = 0,
     DEAD = 1,
-    SUSPENDED = 2,
-    INTERRUPTED = 3
+    SUSPENDED = 2
 }

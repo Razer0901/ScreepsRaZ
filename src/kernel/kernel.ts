@@ -96,13 +96,23 @@ export let suspendProcess = (pid: number) => {
         tempProcess.status = ProcessStatus.SUSPENDED;   // Suspend process
         return pid;
     } else {
-        console.log("Process " + pid + " is already dead.");
+        console.log("Process " + pid + " is dead and can't be suspended.");
         return -1;
     }
 };
 
-export let sendRequest = (destPid: number, data: any) => {
-    getProcessById(destPid).processRequest(data);
+export let sendMessage = (destPid: number, message: IMessage) => {
+    Memory.messages = Memory.messages || {};
+    Memory.messages[destPid] = Memory.messages[destPid] || [];
+    Memory.messages[destPid].push(message);
+    getProcessById(destPid).messageAlert();
+};
+
+export let getMessages = (destPid: number): IMessage[] => {
+    Memory.messages = Memory.messages || {};
+    const tempList = Memory.messages[destPid] || [];
+    Memory.messages[destPid] = [];
+    return tempList;
 };
 
 /**
