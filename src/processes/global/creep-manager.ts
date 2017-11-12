@@ -106,3 +106,13 @@ interface ICreepManagerMemory {
     requestQueue: IMessage[];
     spawning: IMessage[];
 }
+
+export enum CreepStatus {
+    IN_QUEUE = 1,
+    READY = 2
+}
+
+export interface ICreep {
+    creepName: string;
+    status: CreepStatus;
+}

@@ -1,5 +1,6 @@
 /* ===== Imports ===== */
 import * as Kernel from "../../kernel/kernel";
+import {CreepStatus, ICreep} from "../global/creep-manager";
 import {Process, processDecorator, ProcessStatus} from "../process";
 
 @processDecorator("Hauler")                // Define as a type of process
@@ -20,9 +21,9 @@ export class Hauler extends Process {
     public run(): number {
         this.processMessages();
 
-        const tempList = this.memory.creepList;
+        const tempList = _.filter(this.memory.creepList, (creep: ICreep) => creep.status === CreepStatus.READY);
         for (const tempCreepIndex in tempList) {
-            const tempCreep = Game.creeps[tempList[tempCreepIndex]];
+            const tempCreep = Game.creeps[tempList[tempCreepIndex].creepName];
             if (tempCreep) {
                 if (_.sum(tempCreep.carry) === 0) {
                     const droppedLocation: Resource<ResourceConstant> | null = tempCreep.pos.
@@ -58,7 +59,19 @@ export class Hauler extends Process {
             }
         }
 
-        if (this.memory.creepList.length <= 0) {
+        this.spawnCreep();
+
+        return 0;
+    }
+
+    private spawnCreep() {
+        console.log("Before" + this.memory.creepList.length);
+        if (this.memory.creepList.length < 3) {
+
+            if (this.memory.creepList.length <= 0) {
+                this.status = ProcessStatus.SUSPENDED;
+            }
+
             const spawnRequest: ISpawnData = {
                 body: [CARRY, CARRY, MOVE, WORK],
                 creepName: "HL" + Game.time,
@@ -70,17 +83,27 @@ export class Hauler extends Process {
                 originPid: this.pid,
                 timestamp: Game.time
             });
-            this.status = ProcessStatus.SUSPENDED;
-        }
 
-        return 0;
+            const tempCreep: ICreep = {
+                creepName: spawnRequest.creepName,
+                status: CreepStatus.IN_QUEUE
+            };
+
+            this.memory.creepList.push(tempCreep);
+            console.log("after" + this.memory.creepList.length);
+        }
     }
 
     private processMessages() {
         this.memory.creepList = this.memory.creepList || [];
         const tempMessages: IMessage[] = Kernel.getMessages(this.pid);
         for (const message in tempMessages) {
-            this.memory.creepList.push(tempMessages[message].data.creepName);
+            const index = _.find(this.memory.creepList, (creep: ICreep) => {
+                return creep.creepName === tempMessages[message].data.creepName;
+            });
+            if (index) {
+                index.status = CreepStatus.READY;
+            }
         }
     }
 
@@ -93,7 +116,7 @@ export class Hauler extends Process {
 }
 
 interface IHaulerMemory {
-    creepList: string[];
+    creepList: ICreep[];
     creepManagerPid: number;
     roomID: string;
 }
