@@ -36,7 +36,6 @@ export class Harvester extends Process {
                 if (index > -1) {
                     this.memory.creepList.splice(index, 1);
                 }
-                console.log("Removing " + deadCreep);
             }
         }
 

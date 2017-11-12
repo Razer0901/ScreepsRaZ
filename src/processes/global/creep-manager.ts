@@ -71,7 +71,6 @@ export class CreepManager extends Process {
         const tempSpawningList = this.memory.spawning;
         for (const spawn in tempSpawningList) {
             const tempMessage: IMessage = tempSpawningList[spawn];
-            console.log(tempMessage.data.creepName);
             if (!Game.creeps[tempMessage.data.creepName].spawning) {
                 const returnMessage: IMessage = {
                     data: tempMessage.data,
