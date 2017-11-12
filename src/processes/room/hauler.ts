@@ -2,10 +2,10 @@
 import * as Kernel from "../../kernel/kernel";
 import {Process, processDecorator, ProcessStatus} from "../process";
 
-@processDecorator("Harvester")                // Define as a type of process
-export class Harvester extends Process {
+@processDecorator("Hauler")                // Define as a type of process
+export class Hauler extends Process {
 
-    public memory: IHarvesterMemory;
+    public memory: IHaulerMemory;
 
     constructor(pid: number, parentPid: number, memory?: any) {
         super(pid, parentPid, memory);
@@ -24,9 +24,18 @@ export class Harvester extends Process {
         for (const tempCreepIndex in tempList) {
             const tempCreep = Game.creeps[tempList[tempCreepIndex]];
             if (tempCreep) {
-                const target: Source | null = tempCreep.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
-                if (target) {
-                    if (tempCreep.harvest(target) === ERR_NOT_IN_RANGE) {
+                if (_.sum(tempCreep.carry) !== tempCreep.carryCapacity) {
+                    const target: Resource<ResourceConstant> | null = tempCreep.pos.
+                        findClosestByRange(FIND_DROPPED_RESOURCES);
+                    if (target) {
+                        if (tempCreep.pickup(target) === ERR_NOT_IN_RANGE) {
+                            tempCreep.moveTo(target);
+                        }
+                    }
+                } else {
+                    const target = _.filter(Game.spawns, (spawn: Spawn) =>
+                        spawn.room.name === this.memory.roomID)[0];
+                    if (tempCreep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                         tempCreep.moveTo(target);
                     }
                 }
@@ -41,8 +50,8 @@ export class Harvester extends Process {
 
         if (this.memory.creepList.length <= 0) {
             const spawnRequest: ISpawnData = {
-                body: [WORK, WORK, MOVE],
-                creepName: "HR" + Game.time,
+                body: [CARRY, CARRY, MOVE, MOVE],
+                creepName: "HL" + Game.time,
                 roomID: this.memory.roomID
             };
 
@@ -73,7 +82,7 @@ export class Harvester extends Process {
     }
 }
 
-interface IHarvesterMemory {
+interface IHaulerMemory {
     creepList: string[];
     creepManagerPid: number;
     roomID: string;

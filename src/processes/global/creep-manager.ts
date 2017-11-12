@@ -7,12 +7,14 @@ export class CreepManager extends Process {
 
     public memory: ICreepManagerMemory;
     private tempMessages: IMessage[];
+    private availableSpawns: StructureSpawn[] = [];
 
     constructor(pid: number, parentPid: number, memory?: any) {
         super(pid, parentPid, memory);
 
         this.memory.requestQueue = this.memory.requestQueue || [];
         this.memory.spawning = this.memory.spawning || [];
+        this.availableSpawns = _.filter(Game.spawns, (spawn: Spawn) => !spawn.spawning);
     }
 
     /**
@@ -38,17 +40,15 @@ export class CreepManager extends Process {
     }
 
     private processSingleMessage(): number {
-        const availableSpawns = _.filter(Game.spawns, (spawn: Spawn) => !spawn.spawning);
-
-        if (_.size(availableSpawns) >= 0) {
-            const message: IMessage | undefined = this.tempMessages.pop();
+        if (_.size(this.availableSpawns) >= 0) {
+            const message: IMessage | undefined = this.tempMessages.shift();
             if (message) {
-                const possibleSpawns = _.filter(availableSpawns, (spawn: Spawn) => {
+                const possibleSpawns = _.filter(this.availableSpawns, (spawn: Spawn) => {
                     return spawn.spawnCreep(message.data.body, message.data.creepName, { dryRun: true }) === 0;
                 });
 
                 if (_.size(possibleSpawns) <= 0) {
-                    this.tempMessages.push(message);
+                    this.tempMessages.unshift(message);
                     return -1;
                 }
 
@@ -57,7 +57,17 @@ export class CreepManager extends Process {
                     return route instanceof Number ? Infinity : route.length;
                 });
 
-                Game.spawns[orderedSpawns[0].name].spawnCreep(message.data.body, message.data.creepName);
+                const spawnCode =
+                    Game.spawns[orderedSpawns[0].name].spawnCreep(message.data.body, message.data.creepName);
+                if (spawnCode === 0) {
+                    const index = this.availableSpawns.indexOf(orderedSpawns[0]);
+                    if (index > -1) {
+                        this.availableSpawns.splice(index, 1);
+                    }
+                }
+
+                console.log("Spawning " + message.data.creepName + " : " + spawnCode);
+
                 this.memory.spawning = this.memory.spawning || [];
                 this.memory.spawning.push(message);
             }

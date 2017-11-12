@@ -2,6 +2,7 @@
 import * as Kernel from "../../kernel/kernel";
 import {Process, processDecorator, ProcessStatus} from "../process";
 import {Harvester} from "./harvester";
+import {Hauler} from "./hauler";
 
 @processDecorator("Room")                // Define as a type of process
 export class Room extends Process {
@@ -10,8 +11,12 @@ export class Room extends Process {
      * @returns {number}
      */
     public run(): number {
-        const process = new Harvester(0, this.pid, {roomID: this.memory.roomID});
-        Kernel.addProcess(process);
+        const harvesterProcess = new Harvester(0, this.pid, {roomID: this.memory.roomID});
+        Kernel.addProcess(harvesterProcess);
+        Kernel.storeProcessList();
+
+        const haulerProcess = new Hauler(0, this.pid, {roomID: this.memory.roomID});
+        Kernel.addProcess(haulerProcess);
         Kernel.storeProcessList();
 
         this.status = ProcessStatus.SUSPENDED;
