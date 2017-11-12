@@ -24,19 +24,29 @@ export class Hauler extends Process {
         for (const tempCreepIndex in tempList) {
             const tempCreep = Game.creeps[tempList[tempCreepIndex]];
             if (tempCreep) {
-                if (_.sum(tempCreep.carry) !== tempCreep.carryCapacity) {
-                    const target: Resource<ResourceConstant> | null = tempCreep.pos.
+                if (_.sum(tempCreep.carry) === 0) {
+                    const droppedLocation: Resource<ResourceConstant> | null = tempCreep.pos.
                         findClosestByRange(FIND_DROPPED_RESOURCES);
-                    if (target) {
-                        if (tempCreep.pickup(target) === ERR_NOT_IN_RANGE) {
-                            tempCreep.moveTo(target);
+                    if (droppedLocation) {
+                        if (tempCreep.pickup(droppedLocation) === ERR_NOT_IN_RANGE) {
+                            tempCreep.moveTo(droppedLocation);
                         }
                     }
                 } else {
-                    const target = _.filter(Game.spawns, (spawn: Spawn) =>
+                    const spawnLocation = _.filter(Game.spawns, (spawn: Spawn) =>
                         spawn.room.name === this.memory.roomID)[0];
-                    if (tempCreep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                        tempCreep.moveTo(target);
+                    if (spawnLocation.energy !== spawnLocation.energyCapacity) {
+                        if (tempCreep.transfer(spawnLocation, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                            tempCreep.moveTo(spawnLocation);
+                        }
+                    } else {
+                        const controllerLocation: StructureController | undefined = Game.
+                            rooms[this.memory.roomID].controller;
+                        if (controllerLocation) {
+                            if (tempCreep.upgradeController(controllerLocation) === ERR_NOT_IN_RANGE) {
+                                tempCreep.moveTo(controllerLocation);
+                            }
+                        }
                     }
                 }
             } else {
@@ -50,7 +60,7 @@ export class Hauler extends Process {
 
         if (this.memory.creepList.length <= 0) {
             const spawnRequest: ISpawnData = {
-                body: [CARRY, CARRY, MOVE, MOVE],
+                body: [CARRY, CARRY, MOVE, WORK],
                 creepName: "HL" + Game.time,
                 roomID: this.memory.roomID
             };
