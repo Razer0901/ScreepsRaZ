@@ -3,6 +3,7 @@ import {definitions, Process, ProcessStatus} from "../processes/process";
 
 let processList: { [pid: string]: Process} = {};    // Dictionary of processes => Key:pid, Value:process
 let processQueue: Process[] = [];                   // List of processes; Populated every tick
+let potentialProcessQueue: Process[] = [];
 
 /**
  * Clears processList and processQueue variables so they can be re-populated
@@ -10,6 +11,7 @@ let processQueue: Process[] = [];                   // List of processes; Popula
 const clear = () => {
     processList = {};
     processQueue = [];
+    potentialProcessQueue = [];
 };
 
 /**
@@ -53,6 +55,7 @@ export let addProcess = <T extends Process>(process: T) => {
     const pid = getFreePid();                           // Grab valid PID
     process.pid = pid;                                  // Assign PID
     processList[process.pid] = process;                 // Add to list of processes
+    potentialProcessQueue.push(process);
 
     return processList[process.pid];
 };
@@ -120,7 +123,7 @@ export let getMessages = (destPid: number): IMessage[] => {
  */
 export let run = () => {
     // Loops through all processes and run the ones that are alive
-    let process = processQueue.pop();
+    let process = processQueue.shift();
     while (process) {
         try {
             if (process.status === ProcessStatus.ALIVE) {
@@ -132,7 +135,22 @@ export let run = () => {
             console.log(e.stack);
         }
 
-        process = processQueue.pop();
+        process = processQueue.shift();
+    }
+
+    process = potentialProcessQueue.shift();
+    while (process) {
+        try {
+            if (process.status === ProcessStatus.ALIVE) {
+                process.run();
+            }
+        } catch (e) {
+            console.log("Fail to run process:" + process.pid);
+            console.log(e.message);
+            console.log(e.stack);
+        }
+
+        process = potentialProcessQueue.shift();
     }
 };
 
