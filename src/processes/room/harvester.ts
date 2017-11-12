@@ -24,11 +24,11 @@ export class Harvester extends Process {
         for (const tempCreepIndex in tempList) {
             const tempCreep = Game.creeps[tempList[tempCreepIndex]];
             if (tempCreep) {
-                const target = tempCreep.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
+                const target: Source | null = tempCreep.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
                 if (target) {
-                    // if (tempCreep.harvest(target) === ERR_NOT_IN_RANGE) {
+                    if (tempCreep.harvest(target) === ERR_NOT_IN_RANGE) {
                         tempCreep.moveTo(target);
-                    // }
+                    }
                 }
             } else {
                 const deadCreep = tempList[tempCreepIndex];
